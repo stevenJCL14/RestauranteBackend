@@ -1,43 +1,43 @@
-// Importa el objeto mercadopago que ya está configurado
-const mercadopago = require('../config/mercadoPago');
+// Importa directamente la librería de Mercado Pago
+const mercadopago = require('mercadopago');
+
+// Configura las credenciales de Mercado Pago.
+// Esto es más seguro que importarlo de otro archivo, en caso de errores de ruta.
+mercadopago.configure({
+    access_token: process.env.MERCADO_PAGO_ACCESS_TOKEN,
+});
 
 const crearPago = async (req, res) => {
     try {
-        // Obtenemos los datos del pedido directamente del cuerpo de la solicitud
-        const { pedidoId, monto, medioPago } = req.body;
+        const { pedidoId, monto } = req.body;
 
-        // Validamos que los datos necesarios existan
         if (!pedidoId || !monto) {
             return res.status(400).json({ error: 'El ID del pedido y el monto son obligatorios.' });
         }
 
-        // Paso 1: Crear la preferencia de pago en la API de Mercado Pago
-        // Usamos la sintaxis moderna del SDK.
-        const preference = await mercadopago.preferences.create({
+        const preference = {
             items: [
                 {
                     title: `Pedido #${pedidoId}`,
                     quantity: 1,
                     unit_price: parseFloat(monto),
-                    currency_id: 'PEN', // Asegúrate de que esto sea correcto para Perú
+                    currency_id: 'PEN',
                 },
             ],
-            metadata: {
-                pedidoId,
-                medioPago,
-            },
+            external_reference: pedidoId.toString(),
             back_urls: {
                 success: 'https://tu-dominio-frontend.railway.app/cliente.html', // <--- REEMPLAZA ESTA URL
                 failure: 'https://tu-dominio-frontend.railway.app/carrito.html', // <--- REEMPLAZA ESTA URL
                 pending: 'https://tu-dominio-frontend.railway.app/cliente.html', // <--- REEMPLAZA ESTA URL
             },
             auto_return: 'approved',
-        });
+        };
 
-        // Paso 2: Devolver la URL de la pasarela de pago al frontend
+        const result = await mercadopago.preferences.create(preference);
+        
         res.json({
-            id: preference.body.id,
-            init_point: preference.body.init_point,
+            id: result.body.id,
+            init_point: result.body.init_point,
         });
 
     } catch (error) {
