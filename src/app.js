@@ -1,20 +1,25 @@
 const express = require('express');
 const dotenv = require('dotenv');
-dotenv.config();
-require('dotenv').config();
-
 const cors = require('cors');
 
-const app = express();
-app.use(cors());
+// Carga las variables de entorno una sola vez al inicio
+dotenv.config();
 
+const app = express();
+
+// Configuración de CORS para permitir solicitudes desde tu frontend
+const corsOptions = {
+  origin: 'https://stevenjcl.github.io/RestauranteFrontend',
+};
+app.use(cors(corsOptions));
+
+// Middleware para parsear JSON (se usa una sola vez)
 app.use(express.json());
 
-// Importa la instancia de sequelize
+// Importa y sincroniza la base de datos
 const db = require('./models');
-const sequelize = db.sequelize; // Asegúrate de obtenerla así
+const sequelize = db.sequelize;
 
-// Sincroniza los modelos
 sequelize.sync({ alter: true })
   .then(() => {
     console.log('Base de datos sincronizada');
@@ -23,18 +28,10 @@ sequelize.sync({ alter: true })
     console.error('Error al sincronizar la base de datos:', err);
   });
 
-
-
-  
-// ...otros imports
-
-// Middleware para JSON
-app.use(express.json());
-
 // Rutas principales
 const pedidoRoutes = require('./routes/pedidoRoutes');
 app.use('/api/pedidos', pedidoRoutes);
-// Rutas
+
 const menuRoutes = require('./routes/menuRoutes');
 app.use('/api/menus', menuRoutes);
 
@@ -47,13 +44,8 @@ app.use('/api/platos', platoRoutes);
 const clienteRoutes = require('./routes/clienteRoutes');
 app.use('/api/clientes/auth', clienteRoutes);
 
-
-
-
-
 const pagoRoutes = require('./routes/pagoRoutes');
 app.use('/api/pagos', pagoRoutes);
-// etc...
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
