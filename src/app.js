@@ -6,6 +6,8 @@ require('dotenv').config();
 const cors = require('cors');
 
 const app = express();
+app.use(cors());
+
 app.use(express.json());
 
 // Importa la instancia de sequelize
@@ -21,7 +23,7 @@ sequelize.sync({ alter: true })
     console.error('Error al sincronizar la base de datos:', err);
   });
 
-app.use(cors());
+
 
   
 // ...otros imports
