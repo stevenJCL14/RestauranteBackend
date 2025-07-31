@@ -1,11 +1,14 @@
-// Importa directamente la librería de Mercado Pago
-const mercadopago = require('mercadopago');
+// Importa las clases necesarias del SDK de Mercado Pago
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
-// Configura las credenciales de Mercado Pago.
-// Esto es más seguro que importarlo de otro archivo, en caso de errores de ruta.
-mercadopago.configure({
-    access_token: process.env.MERCADO_PAGO_ACCESS_TOKEN,
+// Crea una instancia de la configuración del cliente.
+// Esto es el equivalente moderno a mercadopago.configure()
+const client = new MercadoPagoConfig({
+    accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN,
 });
+
+// Crea una instancia de la clase Preference con el cliente configurado
+const preference = new Preference(client);
 
 const crearPago = async (req, res) => {
     try {
@@ -15,29 +18,29 @@ const crearPago = async (req, res) => {
             return res.status(400).json({ error: 'El ID del pedido y el monto son obligatorios.' });
         }
 
-        const preference = {
+        const preferenceBody = {
             items: [
                 {
                     title: `Pedido #${pedidoId}`,
                     quantity: 1,
                     unit_price: parseFloat(monto),
-                    currency_id: 'PEN',
+                    currency_id: 'PEN', // Moneda de Perú
                 },
             ],
             external_reference: pedidoId.toString(),
             back_urls: {
-                success: 'https://tu-dominio-frontend.railway.app/cliente.html', // <--- REEMPLAZA ESTA URL
-                failure: 'https://tu-dominio-frontend.railway.app/carrito.html', // <--- REEMPLAZA ESTA URL
-                pending: 'https://tu-dominio-frontend.railway.app/cliente.html', // <--- REEMPLAZA ESTA URL
+                success: 'https://stevenjcl.github.io/RestauranteFrontend/cliente.html', // <--- REVISA QUE ESTA URL SEA CORRECTA
+                failure: 'https://stevenjcl.github.io/RestauranteFrontend/carrito.html',  // <--- REVISA QUE ESTA URL SEA CORRECTA
+                pending: 'https://stevenjcl.github.io/RestauranteFrontend/cliente.html',  // <--- REVISA QUE ESTA URL SEA CORRECTA
             },
             auto_return: 'approved',
         };
 
-        const result = await mercadopago.preferences.create(preference);
+        const result = await preference.create({ body: preferenceBody });
         
         res.json({
-            id: result.body.id,
-            init_point: result.body.init_point,
+            id: result.id,
+            init_point: result.init_point,
         });
 
     } catch (error) {
