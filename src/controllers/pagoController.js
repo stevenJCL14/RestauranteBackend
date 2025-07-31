@@ -1,20 +1,31 @@
-// pagoController.js
-
+// Importa el objeto mercadopago que ya está configurado
 const mercadopago = require('../config/mercadoPago');
-const { Pedido, PedidoPlato, Plato } = require('../models'); // Importar los modelos necesarios
+// Importa todos los modelos de la base de datos
+const db = require('../models');
+
+// Extrae los modelos específicos que necesitamos
+const { Pedido, PedidoPlato, Plato } = db;
 
 const crearPago = async (req, res) => {
     try {
-        const { pedidoId, monto } = req.body;
+        const { pedidoId } = req.body;
 
-        // Validar que el pedidoId y el monto existen
-        if (!pedidoId || !monto) {
-            return res.status(400).json({ error: 'Faltan datos del pedido (pedidoId o monto).' });
+        // Validar que el pedidoId existe
+        if (!pedidoId) {
+            return res.status(400).json({ error: 'El ID del pedido es obligatorio.' });
         }
 
-        // Paso 1: Buscar el pedido en la base de datos para obtener los detalles
+        // Paso 1: Buscar el pedido en la base de datos con sus platos asociados
+        // Incluimos los platos para obtener la información necesaria
         const pedido = await Pedido.findByPk(pedidoId, {
-            include: [{ model: PedidoPlato, include: [Plato] }],
+            include: [{
+                model: PedidoPlato,
+                as: 'PedidoPlatos', // Asegúrate de que 'PedidoPlatos' sea el alias correcto para la asociación
+                include: [{
+                    model: Plato,
+                    as: 'Plato' // Asegúrate de que 'Plato' sea el alias correcto para la asociación
+                }]
+            }],
         });
 
         if (!pedido) {
@@ -24,10 +35,10 @@ const crearPago = async (req, res) => {
         // Paso 2: Mapear los platos del pedido a un formato que Mercado Pago entienda
         const items = pedido.PedidoPlatos.map(item => ({
             title: item.Plato.nombre,
-            description: item.Plato.descripcion, // La descripción es opcional
+            description: item.Plato.descripcion,
             quantity: item.cantidad,
             unit_price: parseFloat(item.Plato.precio),
-            currency_id: 'PEN', // Asegúrate de que esto sea correcto para tu país (PEN para Perú)
+            currency_id: 'PEN', // Moneda de Perú. Cámbiala si es necesario.
         }));
 
         // Paso 3: Crear la preferencia de pago en la API de Mercado Pago
@@ -35,9 +46,9 @@ const crearPago = async (req, res) => {
             items: items,
             external_reference: pedidoId.toString(),
             back_urls: {
-                success: 'https://tu-dominio-frontend.railway.app/cliente.html', // URL donde el cliente es redirigido después de un pago exitoso
-                failure: 'https://tu-dominio-frontend.railway.app/carrito.html', // URL en caso de que el pago falle
-                pending: 'https://tu-dominio-frontend.railway.app/cliente.html', // URL si el pago queda pendiente
+                success: 'https://tu-dominio-frontend.com/pago-exitoso', // <--- REEMPLAZA ESTA URL
+                failure: 'https://tu-dominio-frontend.com/pago-fallido', // <--- REEMPLAZA ESTA URL
+                pending: 'https://tu-dominio-frontend.com/pago-pendiente', // <--- REEMPLAZA ESTA URL
             },
             auto_return: 'approved',
         };
