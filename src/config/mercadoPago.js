@@ -1,7 +1,7 @@
 const { MercadoPagoConfig } = require('mercadopago');
 
 const mercadopago = new MercadoPagoConfig({
-  accessToken: "TEST-3844797792094949-072716-d537b5b4908063f2bcff0548361fda7b-2555820397",
+  accessToken: "APP_USR-3844797792094949-072716-9e9311b47d77ca731ff4b0303fd4b3d1-2555820397",
   options: { timeout: 5000 },
 });
 
