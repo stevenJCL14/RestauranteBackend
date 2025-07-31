@@ -9,7 +9,7 @@ const app = express();
 
 // Configuración de CORS para permitir solicitudes desde tu frontend
 const corsOptions = {
-  origin: 'https://stevenjcl.github.io/RestauranteFrontend',
+  origin: 'https://stevenjcl.github.io',
 };
 app.use(cors(corsOptions));
 
