@@ -7,11 +7,9 @@ dotenv.config();
 
 const app = express();
 
-// Configuración de CORS para permitir solicitudes desde tu frontend
-const corsOptions = {
-  origin: 'https://stevenjcl.github.io',
-};
-app.use(cors(corsOptions));
+// Configuración de CORS para permitir solicitudes desde cualquier origen
+// Esto es ideal para el desarrollo.
+app.use(cors());
 
 // Middleware para parsear JSON (se usa una sola vez)
 app.use(express.json());
